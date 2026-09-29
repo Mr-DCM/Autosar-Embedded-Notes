@@ -49,7 +49,7 @@ note right of PORT : 只恢复方向，不重配复用/上下拉\n覆盖运行�
 | 场景 | 方向 | 复用 | 上下拉 | 说明 |
 |---|---|---|---|---|
 | 按键输入（板上无上拉） | 输入 | GPIO | **内部上拉** | 按下接地：读低=按下 |
-| 按键输入（板上有上拉） | 输入 | GPIO | 无 | 别内外叠加，电平会被"分压"到中间态 |
+| 按键输入（板上有上拉） | 输入 | GPIO | 无 | 上拉只留一个 owner。注意：两端同为上拉不会分压出中间态；中间电平出现在两端方向相反（一端上拉/输出高、一端下拉/输出低）时 |
 | LED 推挽输出 | 输出 | GPIO | 无 | 先写初始电平再使能输出，防上电毛刺 |
 | 开漏 I2C | 输出 | GPIO/外设 | 无（外部上拉） | 拉高靠总线上的上拉电阻 |
 | UART TX/RX | 随外设 | 复用功能 | 一般无 | 方向由外设功能接管，Port 不再管方向 |
@@ -93,7 +93,6 @@ API 面（很小，配置大、代码小）：`Port_Init`、`Port_SetPinDirectio
 
 ```c
 #include "Port.h"
-#include "Dio.h"
 
 /* 初始化：通常在 EcuM 驱动初始化列表里，Mcu 之后、其他外设之前 */
 void Board_PortSetup(void)
@@ -101,10 +100,12 @@ void Board_PortSetup(void)
     Port_Init(&Port_Config);   /* 配置由 tresos 按 ARXML 生成，代码只有这一行 */
 }
 
-/* 运行期改方向：必须该脚配置了 DirectionChangeable=TRUE 才有效 */
+/* 运行期改方向：必须该脚配置了 DirectionChangeable=TRUE 才有效。
+   注意两套命名空间：Port API 用 PortConfigSet 里的物理引脚号（PortPinId，如 PTA0=0x0000），
+   Dio API 才用 DioConf_DioChannel_* 通道宏——勿把 Dio 通道 ID 当 Port_PinType 传 */
 void Board_SwitchToOutput(void)
 {
-    (void)Port_SetPinDirection(DioConf_DioChannel_LED0, PORT_PIN_OUT);
+    (void)Port_SetPinDirection(PortConf_PortPinId_LED0, PORT_PIN_OUT);
 }
 
 /* 低功耗唤醒后恢复方向（注意：只恢复方向，且会覆盖运行期改动） */
@@ -119,7 +120,7 @@ void Board_AfterWakeup(void)
 1. **引脚没进 Port 配置清单**：现象是外设"无声"（寄存器都对、脚上没动静）；对策是排障第一步先核对 Port 配置清单里有没有这根脚、复用档对不对。
 2. **运行期改向但没开 DirectionChangeable**：现象是 `Port_SetPinDirection` 报参数无效或无效果；对策是回配置工具打开该项（并想清楚为什么要运行期改向）。
 3. **输出脚先使能输出再写电平**：现象是上电瞬间毛刺（LED 闪一下/继电器抖一下）；对策是初始电平与输出使能的正确次序（先预置电平再使能，实现由 Port_Init 保证，手写裸寄存器时尤其当心）。
-4. **内外上拉叠加或缺失**：现象是输入电平停在中间态/悬空漂移；对策是按原理图确定"上拉只有一个 owner"——要么板上的、要么内部的。
+4. **上下拉方向与板上电路相反或上拉缺失**：现象是输入电平停在中间态/悬空漂移——中间电平只在两端方向相反（一端上拉/输出高、另一端下拉/输出低）时出现，两端同为上拉（高阻上拉）只是并联阻值变小，不会分压出中间态；对策是按原理图确定"上拉只有一个 owner"——要么板上的、要么内部的。
 5. **把 RefreshPortDirections 当万能恢复**：现象是唤醒后复用/上下拉仍不对；对策是认清它只刷方向，全量恢复用 Port_Init（代价是引脚会重新走一遍初始化）。
 6. **CAN/差分脚随手配内部上下拉**：现象是总线显隐性电平异常、偶发错误帧；对策是总线偏置交给收发器，MCU 侧只配复用。
 

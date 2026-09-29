@@ -66,8 +66,10 @@ Profile 是 AUTOSAR E2E 规范预定义的"保护字段打包格式"，差别在
 | **P1** | CRC-8（SAE J1850） | 4 bit | 16 bit 隐式，报文级固定 | 8 bit | 经典 CAN 小报文（8 字节级），最老最普及 |
 | **P2** | CRC-8（SAE J1850） | 4 bit | 8 bit + 16 项 **Data ID List**（随计数值轮换） | 8 bit | 经典 CAN，防伪装要求更高 |
 | **P4** | CRC-32（以太网类） | 32 bit | 32 bit **显式**（随帧传输） | 32 bit | 车载以太网/SOME-IP 大报文（长度可达 GB 级） |
-| **P5** | CRC-16（CCITT 0x1021） | 16 bit | 16 bit 隐式（可配 List） | 16 bit | CAN FD 大帧（64 字节级） |
+| **P5** | CRC-16（CCITT 0x1021） | 8 bit | 16 bit 隐式（可配 List） | 16 bit | CAN FD 大帧（64 字节级） |
 | **P6** | 8/16/32 可选 | 4/8/16/32 可选 | 8/16/32 隐式，可配 | 可选 | 参数化"兜底"型，新项目按需裁剪 |
+
+注：P05 计数器宽度为 8 bit（CRC-16、16 bit Data ID 与长度字段不变），各 Profile 字段定义以 AUTOSAR SWS E2E（PRP_SWC_0065 等）为准。
 
 选型直觉：**报文多大（决定 CRC 与长度字段宽度）、跑在哪种总线（经典 CAN→P1/P2，CAN FD→P5，以太网→P4）、防伪装要多强（P2/P5 的 Data ID List 轮换强于 P1 固定值）**。另有 P7（CRC-64）面向超大数据流（Adaptive 平台时代），了解即可。
 

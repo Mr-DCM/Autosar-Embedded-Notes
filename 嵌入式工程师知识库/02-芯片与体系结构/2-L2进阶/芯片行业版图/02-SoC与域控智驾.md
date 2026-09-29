@@ -24,7 +24,7 @@ SoC 不是"更大的 MCU"，是另一种形态——算力单元异构（CPU+A �
 |---|---|---|---|
 | 座舱 | 高通 8155/8295（SA8155P/8295P）、R-Car H/M 系、NXP i.MX 8 | 仪表+中控+HUD 多屏融合 | 高通占新势力主流 |
 | 智驾 | TI TDA4（Jacinto）、NVIDIA Orin/Thor、Mobileye EyeQ、地平线征程 J5/J6 | 感知-规划-控制计算 | TDA4 带 R5F 实时核（CP 血统） |
-| 网关/跨控 | NXP S32G、TI DRA829/Jacinto 衍生 | 中央网关+区域控制 | A 核跑服务 + M7 锁步跑实时——**跨界形态** |
+| 网关/跨控 | NXP S32G、TI DRA829/Jacinto 衍生 | 中央网关+区域控制 | A 核跑服务 + 锁步实时核兜底（S32G=M7 锁步；DRA829=R5F 锁步 MCU 岛）——**跨界形态** |
 
 ```plantuml
 @startuml

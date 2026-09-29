@@ -25,7 +25,7 @@ skinparam defaultFontSize 13
 box "你的 ECU" #E8F0FE
 participant "按键扫描任务\n(20ms)" as Task
 participant "Can 模块\n(MCAL)" as Can
-participant "FlexCAN/\nMultiCAN 硬件" as Hw
+participant "FlexCAN/\nMCAN 硬件" as Hw
 participant "接收回调\nCanIf→你的钩子" as Rx
 end box
 participant "CANoe/\n另一块板" as Peer
@@ -41,7 +41,7 @@ note over Rx,Task : 全程不经过 Com/PduR——\n这就是"裸驱"的含义
 
 ## 2. 详解：五步落地
 
-**第一步：配 Can 模块。** EB tresos：CanController 波特率 500k（位时序参数采样点 75% 左右，整车常见约定，原理见 [位时序与采样点](../../../05-汽车网络通讯/1-L1基础/CAN/协议原理/02-位时序与采样点.md)）；S32K 上底层 FlexCAN 邮箱（MB）若干，TC377 上是 MultiCAN 的报文对象——概念同构，配置入口见 [CanDrv 接口契约](../../../04-MCAL与外设驱动/2-L2进阶/CanDrv与LinDrv/01-CanDrv接口契约.md)。
+**第一步：配 Can 模块。** EB tresos：CanController 波特率 500k（位时序参数采样点 75% 左右，整车常见约定，原理见 [位时序与采样点](../../../05-汽车网络通讯/1-L1基础/CAN/协议原理/02-位时序与采样点.md)）；S32K 上底层 FlexCAN 邮箱（MB）若干，TC377 上是 MCAN 的报文对象——概念同构，配置入口见 [CanDrv 接口契约](../../../04-MCAL与外设驱动/2-L2进阶/CanDrv与LinDrv/01-CanDrv接口契约.md)。
 
 **第二步：配硬件过滤。** 给接收邮箱/对象设 ID + mask（标准帧 0x456，mask 精确匹配）。不过滤也能收（全收+软件判断），但每帧都进中断，真实项目绝不允许——过滤是第一道减负闸门。
 

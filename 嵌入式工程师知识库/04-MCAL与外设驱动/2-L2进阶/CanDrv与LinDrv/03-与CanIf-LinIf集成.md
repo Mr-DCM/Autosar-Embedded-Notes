@@ -71,7 +71,7 @@ LIN 侧同构：Lin_Init→LinIf_Init（含调度表注册）→LinIf_ScheduleTa
 
 ## 双平台硬件单元对照
 
-| 对照项 | TC377（MultiCAN+ 集成） | S32K（FlexCAN 集成） |
+| 对照项 | TC377（MCAN 集成） | S32K（FlexCAN 集成） |
 |---|---|---|
 | 上电后首步 | 报文 RAM 初始化+节点参数 | MB 清空+控制寄存器解锁（如需） |
 | STARTED 生效动作 | 节点使能+中断源挂接 | Module 进 Normal 模式 |

@@ -45,7 +45,7 @@ BUS [=_BUS=] --> WKU
 | Infineon | TLF35584/TLF35585（多轨安全 PMIC） | 多轨安全供电 | AURIX TC3xx（官方搭配） |
 | TI | TPS65381x（多轨安全 PMIC） | 安全 MCU 供电 | Hercules/TMS570 生态为主 |
 
-**看门狗形态是分档的关键**：低端 SBC 是简单超时窗口；安全 SBC（FS26/TLF）是**窗口看门狗 + 问答式（Question-Answer，按伪随机序列答询）**——后者能防"程序跑飞了还在傻喂狗"，是 ASIL 项目的标配，对应 AUTOSAR 侧 WdgM 的 Alive/Deadline supervision 分层（[11 区/看门狗](../../../11-功能安全与信息安全/2-L2进阶/看门狗与监控/README.md)）。
+**看门狗形态是分档的关键**：低端 SBC 是简单超时窗口；安全 SBC 是**窗口看门狗**，且喂狗机制分两家——NXP FS26/FS85 是**问答式（Question-Answer，按伪随机序列答询）**，Infineon TLF 是**窗口触发式（开窗内 SPI 命令/WDI 引脚边沿触发）**——问答/触发式都能防"程序跑飞了还在傻喂狗"，是 ASIL 项目的标配，对应 AUTOSAR 侧 WdgM 的 Alive/Deadline supervision 分层（[11 区/看门狗](../../../11-功能安全与信息安全/2-L2进阶/看门狗与监控/README.md)）。
 
 ## 选型对照表
 
@@ -64,9 +64,9 @@ SBC 与 MCU 常成"官方搭档"，两家平台的典型供电链路：
 | 维度 | TC377 典型 | S32K 典型 |
 |---|---|---|
 | 搭档 SBC/PMIC | TLF35584（多轨：核/IO/模拟轨） | UJA1169（车身，含收发器）/ FS26（S32K3 搭档） |
-| 喂狗接口 | SPI 问答式（TLF 安全问答） | 窗口/问答（FS26） |
+| 喂狗接口 | 窗口触发式（开窗内 SPI 写 WWDSCMD/WDI 触发，TLF35584） | 窗口（UJA1169）/伪随机问答（FS26） |
 | 唤醒管理 | SBC 汇总唤醒→释放 MCU | 同左；UJA1169 连收发器唤醒一并管 |
-| 软件落点 | WdgM→Wdg 驱动→SPI 问答；EcuM 下电请求 SBC 进 Sleep | 同左（模块名一致，配置对象不同） |
+| 软件落点 | WdgM→Wdg 驱动→SPI 窗口喂狗；EcuM 下电请求 SBC 进 Sleep | 同左（模块名一致，配置对象不同） |
 
 **软件栈是无差别复用的**：AUTOSAR 的 Wdg/EcuM/CanTrcv 抽象抹平了 SBC 差异——这正是 BSW 工程师跨 SBC 迁移比裸机工程师快的原因。
 

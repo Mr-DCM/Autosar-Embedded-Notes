@@ -20,12 +20,12 @@ participant "诊断仪" as TESTER
 participant "Dcm (ECU)" as ECU
 participant "数据提供者\n(SWC/DEM/RTE)" as APP
 
-TESTER -> ECU : 22 F1 86 F1 87（一次要两个 DID）
+TESTER -> ECU : 22 F2 10 F1 87（一次要两个 DID）
 ECU -> APP : 查 DID 路由表，分别取数
-APP --> ECU : F186 数据（供应商码 2B）
+APP --> ECU : F210 数据（示例自定义配置码 2B）
 APP --> ECU : F187 数据（件号 15B）
-note right of ECU : 拼装：62 + F186+数据 + F187+数据
-ECU --> TESTER : 62 F1 86 <2B> F1 87 <15B>
+note right of ECU : 拼装：62 + F210+数据 + F187+数据
+ECU --> TESTER : 62 F2 10 <2B> F1 87 <15B>
 note right of ECU : 拼装后超过 Dcm 缓冲\n则整条拒绝 7F 22 14
 @enduml
 ```

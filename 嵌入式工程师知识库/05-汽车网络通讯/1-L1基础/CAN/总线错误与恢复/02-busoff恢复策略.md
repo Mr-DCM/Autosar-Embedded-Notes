@@ -10,7 +10,7 @@ Bus Off 后节点**完全静默**：不发送、不 ACK、不参与任何总线�
 | 恢复方式 | 机制 | 典型配置 |
 |---|---|---|
 | 自动恢复 | 控制器自己数满 128×11 隐性位，直接清 TEC/REC 回 Error Active | S32K FlexCAN：BOFFREC=0 |
-| 软件恢复 | 控制器数满后停在 Bus Off 状态等指令，软件监控状态位（如 FlexCAN 的 BOFF 标志、TC377 MultiCAN 节点状态）后重启控制器 | FlexCAN BOFFREC=1；或 CanSM 主动 STOPPED→STARTED |
+| 软件恢复 | 控制器数满后停在 Bus Off 状态等指令，软件监控状态位（如 FlexCAN 的 BOFF 标志、TC377 MCAN 节点状态）后重启控制器 | FlexCAN BOFFREC=1；或 CanSM 主动 STOPPED→STARTED |
 
 AUTOSAR 站软件侧：**CanSM 是 Bus Off 恢复的导演**，把"硬件能自动回"升级成"受控地回"——给总线喘息、给自己重启收发环境、给上层一个干净的模式切换：
 
@@ -68,7 +68,7 @@ endif
 
 - **CanSM 配置项**：`CanSMBorTimeL1/L2`（两级等待时长）、`CanSMBorAttemptsL1/L2`（两级尝试次数）、`CanSMTxConfirmationTime`（恢复成功判据窗口）、`CanSMBorCycleTime`（轮询周期）——这些是 EB tresos 里 CanSM 模块的主戏。
 - **CanIf/CanDrv**：BusOff 通知链 `CanDrv 中断 → CanIf_ControllerBusOff → CanSM_ControllerBusOff`；错误档位变化走 `CanIf_ErrorStateChangeNotification`（见 [01-错误计数器与状态](01-错误计数器与状态.md)）。
-- **芯片侧**：TC377 MultiCAN+ 节点状态机可查 BUSOFF 档位；S32K FlexCAN 的 CTRL1.BOFFREC 决定自动/手动恢复——**配置 CanSM 软件恢复时应置手动**，否则硬件抢先回网，CanSM 的 STOPPED/STARTED 序列与控制器实际状态错拍，模式指示会乱。
+- **芯片侧**：TC377 MCAN 节点状态机可查 BUSOFF 档位；S32K FlexCAN 的 CTRL1.BOFFREC 决定自动/手动恢复——**配置 CanSM 软件恢复时应置手动**，否则硬件抢先回网，CanSM 的 STOPPED/STARTED 序列与控制器实际状态错拍，模式指示会乱。
 - **上层联动**：BusOff 期间 CanSM 上报模式变化，BswM 可据此切 limp-home 报文集；Nm 停发会引发 NM 超时——注意 OEM 对"BusOff 恢复期间 NM 是否豁免"的规定。
 - **EcuM/复位链**：两级恢复耗尽后，CanSM 上报 NO_COM，BswM 可请求 EcuM 复位或进入安全状态——这条"最后一手"要与功能安全概念（失效反应时间）一致，不能比 ASIL 要求的反应慢。
 

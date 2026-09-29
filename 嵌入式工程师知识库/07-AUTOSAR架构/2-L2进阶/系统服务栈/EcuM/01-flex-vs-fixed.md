@@ -47,7 +47,7 @@ Fixed 的状态机把"什么时候 RUN、什么时候睡"焊死在 EcuM 里；�
 - **EcuM（Flexible）管"怎么睡"**：执行 Halt、关时钟、配唤醒源——机制执行者；
 - **BswM 管"何时睡/何时醒着"**：模式仲裁与规则（CanSM 状态、KL15、诊断请求）——策略决策者。
 
-交接面：EcuM 在启动祈使完成后进入 RUN，把主导权交给 BswM（经模式请求接口）；BswM 裁决后调 `EcuM_RequestRUN/EcuM_RequestPOSTRUN` 决定 EcuM 状态走向。
+交接面：EcuM 在启动祈使完成后进入 RUN，把主导权交给 BswM（经模式请求接口）。注意 API 归属：`EcuM_RequestRUN/EcuM_RequestPOST_RUN` 是 **Fixed EcuM** 的接口；Flexible EcuM 下由应用经 `EcuM_SetRequestRunMode` 等主动请求表达意愿，BswM 裁决后通过规则调用 `EcuM_Action*`（如 `EcuM_ActionSwitchOff`）驱动 ECU 状态走向。
 
 ## 详解
 

@@ -57,7 +57,7 @@ end
 | 维度 | TC377 HSM | S32K1xx CSEc |
 |---|---|---|
 | 形态 | 独立 TriCore 内核 + 专用 SRAM/ROM + 固件 | 无独立 CPU，固定微码引擎 + 专属 RAM 邮箱 |
-| 密码能力 | 视固件：She+~EVITA Full（可含 RSA/ECC） | AES-128（ECB/CBC/CMAC），非对称无 |
+| 密码能力 | 视固件：She+~EVITA Medium/Full（可含 RSA/ECC，以型号 DS 为准） | AES-128（ECB/CBC/CMAC），非对称无 |
 | 固件 | 可随软件体系升级（版本要与 Crypto 栈配对） | 微码固化，不可升级 |
 | 密钥保护 | HSM 域硬件隔离，调试器黑洞 | 密钥区受属性位保护，调试认证/擦除联动 |
 | 安全启动 | HSM 逐级算 CMAC，链式放行 | SHE Boot 三段式（核心概念图） |
@@ -95,13 +95,13 @@ CSEc 本身只是引擎，AUTOSAR 视角下主核侧还是那条链：`SecOC →
 ## 面试高频题
 
 **Q：CSEc 和 SHE、HSM 是什么关系？**
-答：SHE 是 HIS 的安全模块接口规范（10 密钥槽、CMAC 自举、Key Update、安全启动）；CSEc 是 NXP S32K1xx 对该规范的硬件实现，能力≈EVITA Light（纯 AES-128 对称）；HSM 是更广义、更强的硬件安全模块（独立 CPU、可含非对称加速，如 TC377 HSM 可到 EVITA Full）。三者关系：SHE 是规范，CSEc 是它的轻量硬件实例，HSM 是能力上限更高的通用形态。
+答：SHE 是 HIS 的安全模块接口规范（10 密钥槽、CMAC 自举、Key Update、安全启动）；CSEc 是 NXP S32K1xx 对该规范的硬件实现，能力≈EVITA Light（纯 AES-128 对称）；HSM 是更广义、更强的硬件安全模块（独立 CPU、可含非对称加速，如 TC377 HSM 对应 EVITA Medium~Full 档）。三者关系：SHE 是规范，CSEc 是它的轻量硬件实例，HSM 是能力上限更高的通用形态。
 
 **Q：S32K 的安全启动流程是怎样的？**
 答：三段式 SHE Boot：上电 CSEc 自动用 BOOT_MAC_KEY 计算 Boot 区 CMAC 并与 Flash 中的 BOOT_MAC 比对，写 BOOT_STATUS；通过则 BL 启动，BL 调 GENERATE_MAC 校验 App 的 BOOT_MAC，匹配才跳转；App 运行后调 BOOT_OK 确认成功（BOOT_FAILURE 可作为运行期击杀开关）。信任根是永不外泄的 BOOT_MAC_KEY，镜像改一个字节 CMAC 即失配。
 
 **Q：TC377 HSM 和 S32K CSEc 怎么选型/移植要注意什么？**
-答：能力上 CSEc 停在 SHE/Light（对称、微码固化），TC377 HSM 视固件可到 EVITA Full（非对称、固件可升级）——域控/网关/V2X 选 HSM，节点 ECU 的 SecOC 与启动保护 CSEc 够用。移植时 SecOC/Com/Csm 配置基本不动，替换的是 Crypto 驱动与密钥槽映射；要重点核对两平台的密钥属性语义差异与 CMAC 作业延迟预算。
+答：能力上 CSEc 停在 SHE/Light（对称、微码固化），TC377 HSM 对应 EVITA Medium~Full 档（非对称、固件可升级，具体以型号 DS/安全手册为准）——域控/网关/V2X 选 HSM，节点 ECU 的 SecOC 与启动保护 CSEc 够用。移植时 SecOC/Com/Csm 配置基本不动，替换的是 Crypto 驱动与密钥槽映射；要重点核对两平台的密钥属性语义差异与 CMAC 作业延迟预算。
 
 **Q：RAM_KEY 和 FLASH 密钥槽各适合放什么？**
 答：FLASH 槽（KEY_1~10）持久保存，适合 SecOC 长期密钥、启动密钥，受属性位保护；RAM_KEY 掉电即失，适合会话密钥/临时派生密钥——配合 GENERATE_RND/EXTEND_SEED 每次上电重建，天然抗"拆机提取"。不要把长期密钥只放 RAM_KEY（掉电丢失导致启动失败），也不要把高价值长期密钥频繁经 LOAD_PLAIN_KEY 装载（明文装载通道量产件应禁用）。

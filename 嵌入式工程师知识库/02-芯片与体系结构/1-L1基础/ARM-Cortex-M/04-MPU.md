@@ -128,22 +128,28 @@ CMSIS（CORE_MPU 头）配置骨架：
 
 ```c
 /* 1. 栈守卫：栈底 32B 全禁区域（假设栈向下增长，guard 在 __STACK_LIMIT）
- *    AP=000（特权/非特权均不可读写），SIZE=4 → 32 字节，ENABLE=1 */
+ *    AP=000（特权/非特权均不可读写），SIZE=4 → 32 字节，ENABLE 位由宏内置置 1 */
 ARM_MPU_SetRegion(ARM_MPU_RBAR(7u, (uint32_t)&__STACK_LIMIT),
                   ARM_MPU_RASR(0u,          /* XN=0 */
-                               (0x0u << 24u) |  /* AP=000：全禁 */
-                               (4u << 1u)  |   /* SIZE=4 → 32B */
-                               1u));           /* EN */
+                               0x0u,        /* AP=000：全禁 */
+                               0u,          /* TEX */
+                               0u,          /* S */
+                               0u,          /* C */
+                               0u,          /* B */
+                               0u,          /* SRD：子区域全使能 */
+                               4u));        /* SIZE=4 → 32B */
 
 /* 2. 任务代码区：特权 RW、非特权只读、可执行 */
 ARM_MPU_SetRegion(ARM_MPU_RBAR(8u, TASK_CODE_BASE),
-                  ARM_MPU_RASR(0u, 0x02u << 24u /*AP=010*/, ...));
+                  ARM_MPU_RASR(0u,          /* XN=0 */
+                               0x2u,        /* AP=010 */
+                               ...));       /* TEX/S/C/B/SRD/SIZE 按区域补全 */
 
 /* 3. 使能：开背景区域，HardFault/NMI 期间保持生效 */
 ARM_MPU_Enable(ARM_MPU_CTRL_PRIVDEFENA | ARM_MPU_CTRL_HFNMIENA);
 ```
 
-> 实际工程用 CMSIS 提供的 `ARM_MPU_Load()/ARM_MPU_SetRegion()` 宏按表驱动配置；FreeRTOS-MPU 版本在任务切换钩子里自动换区域组。上面的位拼接仅示意流程，落地时用官方宏，别手拼。
+> CMSIS 原型为 `ARM_MPU_RASR(XN, AP, TEX, S, C, B, SUBDISABLE, SIZE)`——各参数按位域入位、ENABLE 位由宏内部置 1（ARMv8-M 侧另有 `ARM_MPU_RASR_EX`+`ARM_MPU_Attrib` 组合）。实际工程用 CMSIS 提供的 `ARM_MPU_Load()/ARM_MPU_SetRegion()` 宏按表驱动配置；FreeRTOS-MPU 版本在任务切换钩子里自动换区域组。
 
 栈溢出守卫的 MemManage 处理骨架：
 

@@ -24,8 +24,8 @@ start
 :停住内核\n调试器 Halt / 看门狗复位前 Trap 钩子;
 :抓现场:PC(或 RA/A11)、SP、\nTrap 类别+TIN (TC377)\n或 CFSR/HFSR (S32K);
 if (Trap 类别可判?) then (是)
-  :VAF(内存保护)/ME(非法取指)\n→ 查函数指针/栈溢出;
-  :FPU/OPC(非法操作码)\n→ 查编译器版本混链/跳转表错;
+  :VAF(内存保护)→ 查函数指针/栈溢出;\nME(存储类错误:RAM/Flash ECC校验失败)→ 查ECC单双位错误/时序;
+  :FPU/OPC(非法操作码)/非法取指(Program Error类,FCD/PE相关)\n→ 查编译器版本混链/跳转表错;
   :FPI/DataType (S32K: UsageFault)\n→ 查非对齐访问/除零;
 else (PC 在非法地址)
   :跳转表被踩/野指针\n转内存问题套路;
@@ -65,7 +65,7 @@ TriCore 侧的 trap 入口汇编长什么样、寄存器怎么进栈，见 [04-t
 | 出事点 | Trap 返回地址 A11（BTV 派发的上下文） | 压栈的 PC（EXC_RETURN 帧） |
 | 类别号 | Trap Class 0~7 + TIN（查 BTV/寄存器） | HFSR.FORCED→看 CFSR 细分位 |
 | 访问地址 | DPI 类：DIEAR/PIEAR | MMFAR / BFAR |
-| 栈指针 | A10 / ISP | MSP / PSP（靠 EXC_RETURN 位3区分） |
+| 栈指针 | A10 / ISP | MSP / PSP（靠 EXC_RETURN 位2区分：bit2=0 返回后用 MSP，bit2=1 用 PSP） |
 | 上层调用者 | PCXI 链（CSA） | LR 及栈上回溯帧 |
 
 ### 3. 类别判定速查

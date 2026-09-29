@@ -5,7 +5,7 @@
 
 ## 原理
 
-CanDrv 是 AUTOSAR 通讯栈里**唯一直接摸 CAN 控制器**的一层：上面 CanIf 只认"Controller/Hth/Pdu"这些抽象，CanDrv 负责把它们翻译成 MultiCAN/FlexCAN 的邮箱与中断。契约是**双向**的：
+CanDrv 是 AUTOSAR 通讯栈里**唯一直接摸 CAN 控制器**的一层：上面 CanIf 只认"Controller/Hth/Pdu"这些抽象，CanDrv 负责把它们翻译成 MCAN/FlexCAN 的邮箱与中断。契约是**双向**的：
 
 ```plantuml
 @startuml
@@ -53,7 +53,7 @@ CAN_BUSY **不是错误**，是背压信号：它告诉上层"发送资源暂时
 
 ## 双平台硬件单元对照
 
-| 对照项 | TC377（MultiCAN+） | S32K（FlexCAN） |
+| 对照项 | TC377（MCAN） | S32K（FlexCAN） |
 |---|---|---|
 | 硬件对象形态 | 每个 Node 一组报文缓冲+列表 | 每个 Mailbox（MB）一个硬件对象 |
 | 节点/实例 | 多 Node 共享报文 RAM | 多实例（CAN0~CANn），每实例最多 32~64 MB |
@@ -117,7 +117,7 @@ ISR(Can_TxIsr)
 - **Q：Can_Write 返回 CAN_BUSY 说明什么？上层怎么处理？**
   A：说明该 Hth 关联的硬件对象全满（发不过去/仲裁一直输）；上层应重试或丢弃，靠 Com 的发送重试与上层应用监控兜底——它是背压不是故障。
 - **Q：Hth/Hoh 是什么？为什么要这层抽象？**
-  A：HOH 把"一个硬件邮箱（报文缓冲）"抽象成标准对象，Hth 是其发送句柄；CanIf 只按 Hth 路由，不关心底下是 FlexCAN MB 还是 MultiCAN 列表——换芯片只重配映射，栈代码不动。
+  A：HOH 把"一个硬件邮箱（报文缓冲）"抽象成标准对象，Hth 是其发送句柄；CanIf 只按 Hth 路由，不关心底下是 FlexCAN MB 还是 MCAN 列表——换芯片只重配映射，栈代码不动。
 - **Q：CanDrv 和 CanIf 的契约是单向还是双向？各有什么函数？**
   A：双向：下行 CanIf 调 Can_Init/Can_SetControllerMode/Can_Write/MainFunction_*；上行 Can 调 CanIf_TxConfirmation/RxIndication/ControllerModeIndication/ControllerBusOff/ErrorStateChangeNotification。
 - **Q：发送完成的确认为什么走回调而不是 Can_Write 同步返回？**

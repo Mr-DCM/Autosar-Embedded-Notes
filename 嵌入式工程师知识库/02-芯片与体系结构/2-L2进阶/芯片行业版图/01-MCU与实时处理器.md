@@ -26,7 +26,7 @@ TI : AM263x (Cortex-R5F)\nHercules TMS570 存量\nC2000 电机专用\n三电/工
 @enduml
 ```
 
-两条路线一眼看清：**自研内核阵营**（TriCore/V850/PowerPC e200——架构独立、生态封闭、认证材料厚）与 **ARM 授权阵营**（Cortex-M/R——工具链通用、各家差异在外设与安全岛）。你从 S32K 迁 TC377 是跨路线，迁 AM263x 是同路线换核型。
+两条路线一眼看清：**非 ARM/独立架构阵营**（TriCore/V850 自研；PowerPC e200 为 Power Architecture 授权内核，源自 Freescale 体系——共同点是架构独立、生态封闭、认证材料厚）与 **ARM 授权阵营**（Cortex-M/R——工具链通用、各家差异在外设与安全岛）。你从 S32K 迁 TC377 是跨路线，迁 AM263x 是同路线换核型。
 
 ### 阵营画像速览（家族级，参数以 DS 为准）
 
@@ -39,7 +39,7 @@ TI : AM263x (Cortex-R5F)\nHercules TMS570 存量\nC2000 电机专用\n三电/工
 | SPC5 | Power Arch e200 | 单核~三核（SPC58） | 锁步（按料号） | HSM（SPC58 部分） | 动力/车身，欧系存量 | SPC5 Studio（免费 Eclipse）+ GHS 体系 |
 | AM263x | Cortex-R5F | 双/四核，成对锁步 | 锁步对 + 诊断 | 加密加速器（非独立核形态） | 三电/工业/车身跨界 | CCS/TI ARM Clang + 第三方 AUTOSAR |
 
-> C2000（C28x DSP 内核）与 Hercules TMS570（R5F 锁步）是 TI 的另两条线：前者是电机控制专用"准 MCU"（见 [06 篇](06-AFE与专用传感器.md) 的三电链路），后者是安全 MCU 存量平台，新设计在向 AM263x 迁移。
+> C2000（C28x DSP 内核）与 Hercules TMS570（R4F/R5F 锁步，按料号——LS/RM4x 系为 R4F，LC/RM57 为 R5F）是 TI 的另两条线：前者是电机控制专用"准 MCU"（见 [06 篇](06-AFE与专用传感器.md) 的三电链路），后者是安全 MCU 存量平台，新设计在向 AM263x 迁移。
 
 ## 选型对照表
 
@@ -85,7 +85,7 @@ TI : AM263x (Cortex-R5F)\nHercules TMS570 存量\nC2000 电机专用\n三电/工
 2. **低估内核上下文差异的排障影响**：Trap 现场分析（TC377）与 HardFault 现场分析（S32K）套路不同，排障笔记不能直接平移（本库 [异常与Trap](../../3-L3高级/异常与Trap/README.md) 三篇是双平台的，新平台需按内核手册重写对应篇）；
 3. **SPC5 当"新设计平台"学**：Power Architecture SPC56/58 是欧系存量，新项目多转 Stellar 新平台——学它主要是接手存量项目用；
 4. **RH850 子族当一款芯片**：F1x/P1x/G3x 资源与锁步形态差异大，"我们用 RH850"这句话信息量很低，必须追问子族与料号；
-5. **AM263x 当 Cortex-M 对待**：R5F 是"高性能实时核"（MPU、TightCoupledMemory、跑 RTOS/Linux 双向皆可），编程模型比 M 系复杂，接近小 A 核而非大 M 核；
+5. **AM263x 当 Cortex-M 对待**：R5F 是"高性能实时核"（MPU、TightCoupledMemory、跑 RTOS/裸机皆可——PMSA 架构无 MMU，不支持 Linux，要跑 Linux 得换 A 核器件），编程模型比 M 系复杂，接近小 A 核而非大 M 核；
 6. **忽视安全引擎形态差异**：CSEc（SHE 级）与 HSM/HSE（独立核）在 SecOC/安全启动上的工作量差一个量级，选型时只看"有没有加密"会踩坑（详见 [11 区 SecOC](../../../11-功能安全与信息安全/README.md)）。
 
 ## 面试高频题
@@ -100,7 +100,7 @@ TI : AM263x (Cortex-R5F)\nHercules TMS570 存量\nC2000 电机专用\n三电/工
 
 **Q：为什么车规 MCU 有"自研内核"和"ARM 授权"两条路线？各有什么取舍？**
 
-答：自研内核（TriCore/V850/PowerPC）——差异化安全机制（锁步+故障管理深度整合）、认证材料积累厚、生态封闭人才池小；ARM 路线——工具链与人才通用、迭代快（M4→M7→R5F）、各家把差异做在外设与安全岛上。对工程师的含义：ARM 路线间迁移成本低，跨自研内核迁移要重学异常模型。
+答：非 ARM 独立架构（TriCore/V850 自研，PowerPC e200 系授权内核）——差异化安全机制（锁步+故障管理深度整合）、认证材料积累厚、生态封闭人才池小；ARM 路线——工具链与人才通用、迭代快（M4→M7→R5F）、各家把差异做在外设与安全岛上。对工程师的含义：ARM 路线间迁移成本低，跨自研内核迁移要重学异常模型。
 
 ## 延伸
 
