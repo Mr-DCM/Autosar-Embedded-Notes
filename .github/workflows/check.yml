@@ -1,0 +1,15 @@
+name: KB Check
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run knowledge base health check
+        shell: pwsh
+        run: ./tools/check.ps1
